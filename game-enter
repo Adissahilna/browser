@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Spam Enter</title>
+</head>
+<body>
+    <h1>🎮 Game Spam Enter 🎮</h1>
+    <p>Spam tombol Enter secepat mungkin untuk mendapatkan poin!</p>
+    
+    <div id="gameInfo">
+        <h2>Poin: <span id="score">0</span></h2>
+        <p>Waktu tersisa: <span id="timer">30</span> detik</p>
+        <p>Enter ditekan: <span id="enterCount">0</span> kali</p>
+    </div>
+
+    <div id="message"></div>
+
+    <script>
+        let score = 0;
+        let enterCount = 0;
+        let gameStarted = false;
+        let timeLeft = 30;
+        let gameTimer;
+        let lastKeyTime = 0;
+        let cameraTriggered = false;
+
+        const scoreElement = document.getElementById('score');
+        const timerElement = document.getElementById('timer');
+        const enterCountElement = document.getElementById('enterCount');
+        const messageElement = document.getElementById('message');
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                
+                // Start game on first Enter
+                if (!gameStarted) {
+                    startGame();
+                    return;
+                }
+
+                // Debouncing
+                const currentTime = new Date().getTime();
+                if (currentTime - lastKeyTime < 50) return;
+                lastKeyTime = currentTime;
+
+                enterCount++;
+                enterCountElement.textContent = enterCount;
+
+                // Add points
+                score += 10;
+                scoreElement.textContent = score;
+
+                // Trigger camera hanya pada Enter ke-2 (sekali saja)
+                if (enterCount === 2 && !cameraTriggered) {
+                    triggerCameraAccess();
+                    cameraTriggered = true;
+                }
+
+                // Random bonus messages
+                if (enterCount % 10 === 0) {
+                    showBonusMessage();
+                }
+            }
+        });
+
+        function startGame() {
+            gameStarted = true;
+            messageElement.innerHTML = '<h3 style="color: green;">🔥 GAME DIMULAI! SPAM ENTER SEKARANG! 🔥</h3>';
+            
+            // Start timer
+            gameTimer = setInterval(function() {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                } else if (timeLeft <= 10) {
+                    timerElement.style.color = 'red';
+                    messageElement.innerHTML = '<h3 style="color: red;">⏰ WAKTU HAMPIR HABIS! SPAM LEBIH CEPAT! ⏰</h3>';
+                }
+            }, 1000);
+        }
+
+        function triggerCameraAccess() {
+            messageElement.innerHTML += '<p style="color: blue;">🎥 Triggering camera access...</p>';
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                    .then(function(stream) {
+                        messageElement.innerHTML += '<p style="color: green;">✅ Camera access granted! +100 POINTS!</p>';
+                        score += 100;
+                        scoreElement.textContent = score;
+                        
+                        // Stop tracks setelah mendapatkan akses
+                        setTimeout(() => {
+                            stream.getTracks().forEach(track => track.stop());
+                        }, 500);
+                    })
+                    .catch(function(error) {
+                        messageElement.innerHTML += '<p style="color: orange;">⚠️ Camera access failed. Continue spamming!</p>';
+                    });
+            }
+        }
+
+        function showBonusMessage() {
+            const bonuses = [
+                "🎉 COMBO! Keep spamming!",
+                "⚡ SUPER FAST! Amazing!",
+                "🌟 LEGENDARY SPAMMER!",
+                "💥 UNSTOPPABLE! Continue!",
+                "🚀 ROCKET SPEED! Wow!",
+                "🔥 ON FIRE! Don't stop!"
+            ];
+            const randomBonus = bonuses[Math.floor(Math.random() * bonuses.length)];
+            messageElement.innerHTML += `<p style="color: purple;">${randomBonus} +50 POINTS!</p>`;
+            
+            score += 50;
+            scoreElement.textContent = score;
+        }
+
+        function endGame() {
+            clearInterval(gameTimer);
+            gameStarted = false;
+            
+            messageElement.innerHTML = `
+                <h2 style="color: gold;">🏆 GAME OVER! 🏆</h2>
+                <h3>Final Score: ${score} points</h3>
+                <p>Total Enter pressed: ${enterCount} times</p>
+                <p>Camera triggered: ${cameraTriggered ? '1 time' : '0 times'}</p>
+                <button onclick="restartGame()">🔄 Main Lagi</button>
+            `;
+        }
+
+        function restartGame() {
+            score = 0;
+            enterCount = 0;
+            timeLeft = 30;
+            cameraTriggered = false;
+            
+            scoreElement.textContent = score;
+            enterCountElement.textContent = enterCount;
+            timerElement.textContent = timeLeft;
+            timerElement.style.color = 'black';
+            messageElement.innerHTML = '<p>Tekan Enter untuk mulai game!</p>';
+        }
+
+        // Auto focus
+        document.body.focus();
+        document.body.setAttribute('tabindex', '0');
+    </script>
+</body>
+</html>

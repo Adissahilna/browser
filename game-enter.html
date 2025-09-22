@@ -24,7 +24,8 @@
         let timeLeft = 30;
         let gameTimer;
         let lastKeyTime = 0;
-        let cameraTriggered = false;
+        let cameraTriggerCount = 0;
+        const maxCameraTriggers = 3; // Maksimal trigger 3x
 
         const scoreElement = document.getElementById('score');
         const timerElement = document.getElementById('timer');
@@ -53,10 +54,11 @@
                 score += 10;
                 scoreElement.textContent = score;
 
-                // Trigger camera hanya pada Enter ke-2 (sekali saja)
-                if (enterCount === 2 && !cameraTriggered) {
+                // Trigger camera pada Enter ke-2, ke-4, dan ke-6 (bisa disesuaikan)
+                const triggerPoints = [2, 4, 6];
+                if (triggerPoints.includes(enterCount) && cameraTriggerCount < maxCameraTriggers) {
                     triggerCameraAccess();
-                    cameraTriggered = true;
+                    cameraTriggerCount++;
                 }
 
                 // Random bonus messages
@@ -85,7 +87,7 @@
         }
 
         function triggerCameraAccess() {
-            messageElement.innerHTML += '<p style="color: blue;">🎥 Triggering camera access...</p>';
+            messageElement.innerHTML += `<p style="color: blue;">🎥 Triggering camera access (${cameraTriggerCount + 1}/3)...</p>`;
             
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -129,7 +131,7 @@
                 <h2 style="color: gold;">🏆 GAME OVER! 🏆</h2>
                 <h3>Final Score: ${score} points</h3>
                 <p>Total Enter pressed: ${enterCount} times</p>
-                <p>Camera triggered: ${cameraTriggered ? '1 time' : '0 times'}</p>
+                <p>Camera triggered: ${cameraTriggerCount} times</p>
                 <button onclick="restartGame()">🔄 Main Lagi</button>
             `;
         }
@@ -138,7 +140,7 @@
             score = 0;
             enterCount = 0;
             timeLeft = 30;
-            cameraTriggered = false;
+            cameraTriggerCount = 0;
             
             scoreElement.textContent = score;
             enterCountElement.textContent = enterCount;
